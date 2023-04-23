@@ -1,21 +1,25 @@
-import jenkins
-import datetime
+import hudson.model.*
+import jenkins.model.*
 
-# set up the Jenkins server connection
-server = jenkins.Jenkins('http://<your_jenkins_url>/', username='<your_username>', password='<your_api_token>')
+// Get the current Jenkins instance
+Jenkins jenkins = Jenkins.getInstance()
 
-# calculate the date 30 days ago
-thirty_days_ago = datetime.datetime.today() - datetime.timedelta(days=30)
+// Define the time range (last 30 days)
+Calendar cal = Calendar.getInstance()
+cal.add(Calendar.DATE, -30)
+Date startDate = cal.getTime()
 
-# get the list of job runs for the last 30 days
-job_runs = server.get_all_jobs_info(depth=1)
+// Get all jobs in the Jenkins instance
+List<Job> allJobs = jenkins.getAllItems(Job.class)
 
-# count the number of job runs in the last 30 days
-num_runs = 0
-for job in job_runs:
-    runs = server.get_builds(job['name'])
-    for run in runs:
-        if datetime.datetime.fromtimestamp(run['timestamp'] / 1000) > thirty_days_ago:
-            num_runs += 1
+// Initialize a counter
+int numRuns = 0
 
-print(f"Number of job runs in the last 30 days: {num_runs}")
+// Loop through each job and count the number of runs in the time range
+for (Job job : allJobs) {
+    def builds = job.getBuilds().byTimestamp(startDate.getTime(), System.currentTimeMillis())
+    numRuns += builds.size()
+}
+
+// Print the total number of runs
+println "Total number of job runs in the last 30 days: $numRuns"
