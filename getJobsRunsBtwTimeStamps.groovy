@@ -13,17 +13,15 @@ sdf.timeZone = TimeZone.getTimeZone("UTC")
 def startDate = sdf.parse(startDateStr)
 def endDate = sdf.parse(endDateStr)
 
-def jobCount = 0
+def buildCount = 0
 
 // Get all the jobs in Jenkins
 Jenkins.instance.getAllItems(AbstractProject.class).each { job ->
-    // Get the last build for each job
-    def lastBuild = job.lastBuild
-
-    // Check if the last build exists and was started between the start and end date
-    if (lastBuild != null && lastBuild.getTimeInMillis() >= startDate.getTime() && lastBuild.getTimeInMillis() <= endDate.getTime()) {
-        jobCount++
+    // Get all the builds for each job
+    job.getBuilds().each { build ->
+        // Check if the build exists and was started between the start and end date
+        if (build.getTimeInMillis() >= startDate.getTime() && build.getTimeInMillis() <= endDate.getTime()) {
+            buildCount++
+        }
     }
 }
-
-println "Number of jobs triggered between ${startDateStr} and ${endDateStr}: ${jobCount}"
