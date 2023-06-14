@@ -1,0 +1,25 @@
+import jenkins.model.Jenkins
+import org.jenkinsci.plugins.workflow.job.WorkflowJob
+
+Jenkins.instance.allItems.findAll { it instanceof WorkflowJob }.each { job ->
+    def longestDuration = 0
+
+    job.builds.each { build ->
+        if (build.duration > longestDuration) {
+            longestDuration = build.duration
+        }
+    }
+
+    if (longestDuration > 0) {
+        println "Pipeline: ${job.fullName} | Longest Build Duration: ${longestDuration}ms"
+    } else {
+        println "Pipeline: ${job.fullName} | No builds found."
+    }
+}
+
+
+
+
+
+
+
