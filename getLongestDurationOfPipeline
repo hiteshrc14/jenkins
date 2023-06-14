@@ -1,27 +1,14 @@
 import jenkins.model.Jenkins
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 
-Jenkins.instance.allItems.findAll { it instanceof WorkflowJob }.each { job ->
-    def longestDuration = 0
+def thresholdDuration = 4 * 60 * 60 * 1000 // 4 hours in milliseconds
 
-    def masterBuild = job.getLastBuild()
-    while (masterBuild != null) {
-        if (masterBuild.duration > longestDuration) {
-            longestDuration = masterBuild.duration
-        }
-        masterBuild = masterBuild.getPreviousBuild()
+Jenkins.instance.allItems.findAll { it instanceof WorkflowJob }.each { job ->
+    def hasLongBuild = job.builds.any { build ->
+        build.duration > thresholdDuration
     }
 
-    if (longestDuration > 0) {
-        println "Pipeline: ${job.fullName} | Longest Master Build Duration: ${longestDuration}ms"
-    } else {
-        println "Pipeline: ${job.fullName} | No master builds found."
+    if (hasLongBuild) {
+        println "Pipeline: ${job.fullName}"
     }
 }
-
-
-
-
-
-
-
