@@ -4,16 +4,18 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob
 Jenkins.instance.allItems.findAll { it instanceof WorkflowJob }.each { job ->
     def longestDuration = 0
 
-    job.builds.each { build ->
-        if (build.duration > longestDuration) {
-            longestDuration = build.duration
+    def masterBuild = job.getLastBuild()
+    while (masterBuild != null) {
+        if (masterBuild.duration > longestDuration) {
+            longestDuration = masterBuild.duration
         }
+        masterBuild = masterBuild.getPreviousBuild()
     }
 
     if (longestDuration > 0) {
-        println "Pipeline: ${job.fullName} | Longest Build Duration: ${longestDuration}ms"
+        println "Pipeline: ${job.fullName} | Longest Master Build Duration: ${longestDuration}ms"
     } else {
-        println "Pipeline: ${job.fullName} | No builds found."
+        println "Pipeline: ${job.fullName} | No master builds found."
     }
 }
 
