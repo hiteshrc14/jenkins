@@ -1,5 +1,5 @@
 import groovy.json.JsonSlurper
-import groovy.util.Base64
+import javax.xml.bind.DatatypeConverter
 
 // Define your Bitbucket API URL and authentication credentials
 def bitbucketUrl = 'https://api.bitbucket.org/2.0'
@@ -9,7 +9,7 @@ def password = 'your_password'
 // Encode the credentials for Basic Authentication
 def authString = "${username}:${password}"
 def authBytes = authString.bytes
-def authEncoded = Base64.encodeBase64String(authBytes)
+def authEncoded = DatatypeConverter.printBase64Binary(authBytes)
 
 // Define the Bitbucket API endpoint you want to call
 def endpoint = '/repositories/your_username/your_repo'
