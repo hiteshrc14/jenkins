@@ -5,12 +5,14 @@ json_file="data.json"
 
 # Check if the file exists
 if [ -f "$json_file" ]; then
-    # Read JSON data from the file
-    json_data=$(cat "$json_file")
+    # Loop through key-value pairs and store in variables
+    while IFS= read -r line; do
+        key=$(jq -r '.key' <<< "$line")
+        value=$(jq -r '.value' <<< "$line")
 
-    # Iterate over key-value pairs
-    jq -c '. | to_entries | .[] | "\(.key): \(.value)"' <<< "$json_data"
-
+        # Do something with the key and value (replace with your logic)
+        echo "Key: $key, Value: $value"
+    done < <(jq -c 'to_entries | .[]' < "$json_file")
 else
     echo "Error: File $json_file not found."
 fi
