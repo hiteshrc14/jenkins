@@ -1,8 +1,6 @@
-stage('Example') {
-            steps {
-                withCredentials([string(credentialsId: 'your-api-key-credential-id', variable: 'API_KEY')]) {
-                    // Here, you can use the API_KEY variable to access your API key securely
-                    echo "My API key is ${API_KEY}"
-                    // You can use the API key in curl commands or any other commands requiring authentication
-                }
-            }
+        // Add build strategies
+        node / 'buildStrategies' << 'jenkins.branch.buildstrategies.basic.AllBranchBuildStrategyImpl' {
+          strategies {
+            'jenkins.branch.buildstrategies.basic.SkipInitialBuildOnFirstBranchIndexing' {}
+          }
+        }
