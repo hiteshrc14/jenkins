@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spinnaker Report</title>
+    <style>
+        /* CSS for table styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f6f8fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .panel {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e6e9ed; /* Added border */
+        }
+        h1 {
+            color: #364656;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        th, td {
+            border: 1px solid #e6e9ed;
+            padding: 8px; /* Adjusted padding */
+            text-align: left;
+            font-size: 14px; /* Adjusted font size */
+            max-width: 150px; /* Adjusted maximum width */
+            white-space: nowrap; /* Prevent wrapping */
+            overflow: hidden; /* Hide overflow */
+            text-overflow: ellipsis; /* Show ellipsis for overflow */
+        }
+        th {
+            background-color: #f2f5f8;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #8c9ba5;
+            cursor: pointer; /* Add cursor pointer for sorting */
+        }
+        tr:hover {
+            background-color: #f9fafb;
+        }
+        select {
+            padding: 8px;
+            border: 1px solid #e6e9ed;
+            border-radius: 4px;
+            background-color: #ffffff;
+            font-size: 14px;
+            color: #364656;
+            width: 100%;
+            margin-top: 8px; /* Added margin */
+        }
+        option {
+            background-color: #ffffff;
+            color: #364656;
+        }
+        .option {
+            display: flex; /* Display label and selection side by side */
+            align-items: center; /* Align vertically */
+            margin-bottom: 8px; /* Added margin */
+        }
+        label {
+            font-size: 14px; /* Adjusted font size */
+            margin-right: 8px; /* Added margin */
+        }
+        /* Lighter colors for colored cells */
+        .colored-cell {
+            background-color: #f0f5ff; /* Light blue */
+        }
+    </style>
+</head>
+<body>
+
+<h1>Spinnaker Usage Report</h1>
+
+<div class="panel">
+    <div class="option">
+        <strong><label for="name-select">Spinnaker Application Name</label></strong>
+        <select id="name-select" onchange="filterJsonData()">
+            <option value="">Show all applications</option>
+        </select>
+    </div>
+    <div class="option">
+        <strong><label for="ignore-no-runs">Ignore pipelines with no runs</label></strong>
+        <input type="checkbox" id="ignore-no-runs" onchange="filterJsonData()">
+    </div>
+    <div class="option">
+        <strong><label for="ignore-dinghy">Ignore dinghy test pipelines</label></strong>
+        <input type="checkbox" id="ignore-dinghy" onchange="filterJsonData()">
+    </div>
+    <div class="option">
+        <strong><label for="hide-non-terraform">Hide Non-Terraform Pipelines</label></strong>
+        <input type="checkbox" id="hide-non-terraform" onchange="filterJsonData()">
+    </div>
+    <div class="option">
+        <strong><label for="date-select">Show data after</label></strong>
+        <input type="date" id="date-select" onchange="filterJsonData()">
+    </div>
+</div>
+
+<div class="panel">
+    <table>
+        <tr>
+            <th>Total Number of Applications</th>
+            <td id="total-applications"></td>
+        </tr>
+        <tr>
+            <th>Total Number of Pipelines</th>
+            <td id="total-pipelines"></td>
+        </tr>
+        <tr>
+            <th>Total Number of Pipelines with No Runs</th>
+            <td id="total-inactive-pipelines"></td>
+        </tr>
+    </table>
+</div>
+
+<div class="panel">
+    <table id="json-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Pipeline Name</th>
+                <th id="tf-version-header">TF Version</th>
+                <th>Last Triggered At</th>
+                <th>Last Triggered By</th>
+            </tr>
+        </thead>
+        <tbody id="json-data">
+            <!-- JSON data will be inserted here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Updated JSON data with two records
+    var jsonData = [
+        {
+            "name": "Monitoring",
+            "Pipeline Name" : "grafana",
+            "TF Version": "1.2.3",
+            "Last Triggered At": "02-01-2024 10:22:04",
+            "Last Triggered By": "john.doe@example.com",
+        },
+        {
+            "name": "Toolchain",
+            "Pipeline Name": "atlassian",
+            "TF Version": "2.0.0",
+            "Last Triggered At": "05-06-2023 14:26:14",
+            "Last Triggered By": "john.doe@example.com"
+        },
+        {
+            "name": "Toolchain",
+            "Pipeline Name": "jenkins",
+            "TF Version": "No runs",
+            "Last Triggered At": "No runs",
+            "Last Triggered By": "jane.smith@example.com"
+        }
+    ];
+
+    // Define color palette
+    var colorPalette = ['#cfe2f3', '#d9ead3', '#fff2cc', '#ffe6cc', '#ffd9b3', '#d9d2e9'];
+
+    // Default sort direction
+    var sortDirection = 'asc';
+
+    // Function to render JSON data in HTML table
+    function renderJsonData(data) {
+        var tableBody = document.getElementById('json-data');
+        tableBody.innerHTML = '';
+
+        // Create a mapping of names to colors
+        var nameColorMap = {};
+        var colorIndex = 0;
+
+        data.forEach(function(record) {
+            var name = record.name;
+            if (!nameColorMap.hasOwnProperty(name)) {
+                nameColorMap[name] = colorPalette[colorIndex % colorPalette.length];
+                colorIndex++;
+            }
+        });
+
+        data.forEach(function(record) {
+            var row = document.createElement('tr');
+            var name = record.name;
+            var color = nameColorMap[name];
+
+            row.innerHTML = '<td class="colored-cell" style="background-color:' + color + '">' + name + '</td>' +
+                            '<td>' + record["Pipeline Name"] + '</td>' +
+                            '<td>' + record["TF Version"] + '</td>' +
+                            '<td>' + record["Last Triggered At"] + '</td>' +
+                            '<td>' + record["Last Triggered By"] + '</td>';
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Function to populate dropdown with unique application names
+    function populateDropdown() {
+        var select = document.getElementById('name-select');
+        var names = jsonData.map(function(record) {
+            return record.name;
+        });
+
+        var uniqueNames = Array.from(new Set(names));
+
+        uniqueNames.forEach(function(name) {
+            var option = document.createElement('option');
+            option.text = name;
+            option.value = name;
+            select.add(option);
+        });
+    }
+
+    // Function to filter JSON data based on selected options
+    function filterJsonData() {
+        var selectedName = document.getElementById('name-select').value;
+        var ignoreNoRuns = document.getElementById('ignore-no-runs').checked;
+        var ignoreDinghy = document.getElementById('ignore-dinghy').checked;
+        var hideNonTerraform = document.getElementById('hide-non-terraform').checked;
+        var selectedDate = document.getElementById('date-select').value;
+
+        var filteredData = jsonData.filter(function(record) {
+            var passNoRuns = !ignoreNoRuns || record["Last Triggered At"] !== "No runs";
+            var passDinghy = !ignoreDinghy || !record.name.toLowerCase().startsWith("dinghy");
+            var passHideNonTerraform = !hideNonTerraform || record["TF Version"].match(/^\d/);
+            var passDate = selectedDate === "" || new Date(record["Last Triggered At"]) > new Date(selectedDate);
+            return passNoRuns && passDinghy && passHideNonTerraform && passDate && (selectedName === "" || record.name === selectedName);
+        });
+
+        renderJsonData(filteredData);
+        displayTotalApplications(filteredData);
+        displayTotalPipelines(filteredData);
+        displayTotalInactivePipelines(filteredData);
+    }
+
+    // Function to display the total number of unique applications
+    function displayTotalApplications(data) {
+        var uniqueApplications = Array.from(new Set(data.map(function(record) {
+            return record.name;
+        })));
+        var totalApplications = uniqueApplications.length;
+        var totalApplicationsElement = document.getElementById('total-applications');
+        totalApplicationsElement.textContent = totalApplications;
+    }
+
+    // Function to display the total number of pipelines
+    function displayTotalPipelines(data) {
+        var totalPipelines = data.length;
+        var totalPipelinesElement = document.getElementById('total-pipelines');
+        totalPipelinesElement.textContent = totalPipelines;
+    }
+
+    // Function to display the total number of inactive pipelines
+    function displayTotalInactivePipelines(data) {
+        var totalInactivePipelines = data.filter(function(record) {
+            return record["Last Triggered At"] === "No runs";
+        }).length;
+        var totalInactivePipelinesElement = document.getElementById('total-inactive-pipelines');
+        totalInactivePipelinesElement.textContent = totalInactivePipelines;
+    }
+
+    // Function to sort table data based on TF Version column
+    function sortTableByTFVersion() {
+        var table, rows, switching, i, x, y, shouldSwitch;
+        table = document.getElementById("json-table");
+        switching = true;
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[2];
+                y = rows[i + 1].getElementsByTagName("TD")[2];
+                if (sortDirection === 'asc') {
+                    if (parseFloat(x.innerHTML) > parseFloat(y.innerHTML)) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else {
+                    if (parseFloat(x.innerHTML) < parseFloat(y.innerHTML)) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+            }
+        }
+        // Change sort direction
+        sortDirection = (sortDirection === 'asc') ? 'desc' : 'asc';
+    }
+
+    // Initial setup
+    populateDropdown();
+    renderJsonData(jsonData);
+    displayTotalApplications(jsonData);
+    displayTotalPipelines(jsonData);
+    displayTotalInactivePipelines(jsonData);
+
+    // Add event listener for TF Version column header
+    document.getElementById("tf-version-header").addEventListener("click", function() {
+        sortTableByTFVersion();
+    });
+</script>
+
+</body>
+</html>
