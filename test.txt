@@ -77,6 +77,12 @@
         .colored-cell {
             background-color: #f0f5ff; /* Light blue */
         }
+        #loading-message {
+            display: none;
+            margin-top: 10px;
+            font-style: italic;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -141,6 +147,8 @@
         </tbody>
     </table>
 </div>
+
+<p id="loading-message">Loading data...</p>
 
 <script>
     // Updated JSON data with two records
@@ -224,6 +232,9 @@
 
     // Function to filter JSON data based on selected options
     function filterJsonData() {
+        // Show loading message
+        document.getElementById('loading-message').style.display = 'block';
+
         var selectedName = document.getElementById('name-select').value;
         var ignoreNoRuns = document.getElementById('ignore-no-runs').checked;
         var ignoreDinghy = document.getElementById('ignore-dinghy').checked;
@@ -238,10 +249,15 @@
             return passNoRuns && passDinghy && passHideNonTerraform && passDate && (selectedName === "" || record.name === selectedName);
         });
 
-        renderJsonData(filteredData);
-        displayTotalApplications(filteredData);
-        displayTotalPipelines(filteredData);
-        displayTotalInactivePipelines(filteredData);
+        // Delay rendering to simulate sorting time
+        setTimeout(function() {
+            renderJsonData(filteredData);
+            displayTotalApplications(filteredData);
+            displayTotalPipelines(filteredData);
+            displayTotalInactivePipelines(filteredData);
+            // Hide loading message
+            document.getElementById('loading-message').style.display = 'none';
+        }, 2000); // Adjust the delay time as needed
     }
 
     // Function to display the total number of unique applications
@@ -272,6 +288,9 @@
 
     // Function to sort table data based on TF Version column
     function sortTableByTFVersion() {
+        // Show loading message
+        document.getElementById('loading-message').style.display = 'block';
+
         var table, rows, switching, i, x, y, shouldSwitch;
         table = document.getElementById("json-table");
         switching = true;
@@ -299,6 +318,8 @@
                 switching = true;
             }
         }
+        // Hide loading message
+        document.getElementById('loading-message').style.display = 'none';
         // Change sort direction
         sortDirection = (sortDirection === 'asc') ? 'desc' : 'asc';
     }
