@@ -77,6 +77,16 @@
         .colored-cell {
             background-color: #f0f5ff; /* Light blue */
         }
+        .export-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -142,6 +152,8 @@
     </table>
 </div>
 
+<button class="export-btn" onclick="exportTableToCSV()">Export to CSV</button>
+
 <script>
     // Updated JSON data with two records
     var jsonData = [
@@ -168,32 +180,15 @@
         }
     ];
 
-    // Define color palette
-    var colorPalette = ['#cfe2f3', '#d9ead3', '#fff2cc', '#ffe6cc', '#ffd9b3', '#d9d2e9'];
-
     // Function to render JSON data in HTML table
     function renderJsonData(data) {
         var tableBody = document.getElementById('json-data');
         tableBody.innerHTML = '';
 
-        // Create a mapping of names to colors
-        var nameColorMap = {};
-        var colorIndex = 0;
-
-        data.forEach(function(record) {
-            var name = record.name;
-            if (!nameColorMap.hasOwnProperty(name)) {
-                nameColorMap[name] = colorPalette[colorIndex % colorPalette.length];
-                colorIndex++;
-            }
-        });
-
         data.forEach(function(record) {
             var row = document.createElement('tr');
-            var name = record.name;
-            var color = nameColorMap[name];
 
-            row.innerHTML = '<td class="colored-cell" style="background-color:' + color + '">' + name + '</td>' +
+            row.innerHTML = '<td>' + record.name + '</td>' +
                             '<td>' + record["Pipeline Name"] + '</td>' +
                             '<td>' + record["TF Version"] + '</td>' +
                             '<td>' + record["Last Triggered At"] + '</td>' +
@@ -202,77 +197,58 @@
         });
     }
 
-    // Function to populate dropdown with unique application names
-    function populateDropdown() {
-        var select = document.getElementById('name-select');
-        var names = jsonData.map(function(record) {
-            return record.name;
-        });
+    // Function to export table data to CSV
+    function exportTableToCSV() {
+        var csv = [];
+        var rows = document.querySelectorAll("#json-table tbody tr");
 
-        var uniqueNames = Array.from(new Set(names));
+        for (var i = 0; i < rows.length; i++) {
+            var row = [], cols = rows[i].querySelectorAll("td, th");
 
-        uniqueNames.forEach(function(name) {
-            var option = document.createElement('option');
-            option.text = name;
-            option.value = name;
-            select.add(option);
-        });
+            for (var j = 0; j < cols.length; j++)
+                row.push(cols[j].innerText);
+
+            csv.push(row.join(","));
+        }
+
+        // Download CSV file
+        downloadCSV(csv.join("\n"), "table_data.csv");
     }
 
-    // Function to filter JSON data based on selected options
-    function filterJsonData() {
-        var selectedName = document.getElementById('name-select').value;
-        var ignoreNoRuns = document.getElementById('ignore-no-runs').checked;
-        var ignoreDinghy = document.getElementById('ignore-dinghy').checked;
-        var hideNonTerraform = document.getElementById('hide-non-terraform').checked;
-        var selectedDate = document.getElementById('date-select').value;
+    // Function to download CSV file
+    function downloadCSV(csv, filename) {
+        var csvFile;
+        var downloadLink;
 
-        var filteredData = jsonData.filter(function(record) {
-            var passNoRuns = !ignoreNoRuns || record["Last Triggered At"] !== "No runs";
-            var passDinghy = !ignoreDinghy || !record.name.toLowerCase().startsWith("dinghy");
-            var passHideNonTerraform = !hideNonTerraform || record["TF Version"].match(/^\d/);
-            var passDate = selectedDate === "" || new Date(record["Last Triggered At"]) > new Date(selectedDate);
-            return passNoRuns && passDinghy && passHideNonTerraform && passDate && (selectedName === "" || record.name === selectedName);
-        });
+        // Create CSV file
+        csvFile = new Blob([csv], {type: "text/csv"});
 
-        renderJsonData(filteredData);
-        displayTotalApplications(filteredData);
-        displayTotalPipelines(filteredData);
-        displayTotalInactivePipelines(filteredData);
-    }
+        // Create download link
+        downloadLink = document.createElement("a");
 
-    // Function to display the total number of unique applications
-    function displayTotalApplications(data) {
-        var uniqueApplications = Array.from(new Set(data.map(function(record) {
-            return record.name;
-        })));
-        var totalApplications = uniqueApplications.length;
-        var totalApplicationsElement = document.getElementById('total-applications');
-        totalApplicationsElement.textContent = totalApplications;
-    }
+        // File name
+        downloadLink.download = filename;
 
-    // Function to display the total number of pipelines
-    function displayTotalPipelines(data) {
-        var totalPipelines = data.length;
-        var totalPipelinesElement = document.getElementById('total-pipelines');
-        totalPipelinesElement.textContent = totalPipelines;
-    }
+        // Create a link to the file
+        downloadLink.href = window.URL.createObjectURL(csvFile);
 
-    // Function to display the total number of inactive pipelines
-    function displayTotalInactivePipelines(data) {
-        var totalInactivePipelines = data.filter(function(record) {
-            return record["Last Triggered At"] === "No runs";
-        }).length;
-        var totalInactivePipelinesElement = document.getElementById('total-inactive-pipelines');
-        totalInactivePipelinesElement.textContent = totalInactivePipelines;
+        // Hide download link
+        downloadLink.style.display = "none";
+
+        // Add the link to DOM
+        document.body.appendChild(downloadLink);
+
+        // Click download link
+        downloadLink.click();
     }
 
     // Initial setup
-    populateDropdown();
     renderJsonData(jsonData);
-    displayTotalApplications(jsonData);
-    displayTotalPipelines(jsonData);
-    displayTotalInactivePipelines(jsonData);
+
+    // Add event listener for TF Version column header
+    document.getElementById("tf-version-header").addEventListener("click", function() {
+        sortTableByTFVersion();
+    });
 </script>
 
 </body>
