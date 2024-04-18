@@ -77,12 +77,6 @@
         .colored-cell {
             background-color: #f0f5ff; /* Light blue */
         }
-        #loading-message {
-            display: none;
-            margin-top: 10px;
-            font-style: italic;
-            color: #888;
-        }
     </style>
 </head>
 <body>
@@ -148,8 +142,6 @@
     </table>
 </div>
 
-<p id="loading-message">Loading data...</p>
-
 <script>
     // Updated JSON data with two records
     var jsonData = [
@@ -178,9 +170,6 @@
 
     // Define color palette
     var colorPalette = ['#cfe2f3', '#d9ead3', '#fff2cc', '#ffe6cc', '#ffd9b3', '#d9d2e9'];
-
-    // Default sort direction
-    var sortDirection = 'asc';
 
     // Function to render JSON data in HTML table
     function renderJsonData(data) {
@@ -232,9 +221,6 @@
 
     // Function to filter JSON data based on selected options
     function filterJsonData() {
-        // Show loading message
-        document.getElementById('loading-message').style.display = 'block';
-
         var selectedName = document.getElementById('name-select').value;
         var ignoreNoRuns = document.getElementById('ignore-no-runs').checked;
         var ignoreDinghy = document.getElementById('ignore-dinghy').checked;
@@ -249,15 +235,10 @@
             return passNoRuns && passDinghy && passHideNonTerraform && passDate && (selectedName === "" || record.name === selectedName);
         });
 
-        // Delay rendering to simulate sorting time
-        setTimeout(function() {
-            renderJsonData(filteredData);
-            displayTotalApplications(filteredData);
-            displayTotalPipelines(filteredData);
-            displayTotalInactivePipelines(filteredData);
-            // Hide loading message
-            document.getElementById('loading-message').style.display = 'none';
-        }, 2000); // Adjust the delay time as needed
+        renderJsonData(filteredData);
+        displayTotalApplications(filteredData);
+        displayTotalPipelines(filteredData);
+        displayTotalInactivePipelines(filteredData);
     }
 
     // Function to display the total number of unique applications
@@ -286,55 +267,12 @@
         totalInactivePipelinesElement.textContent = totalInactivePipelines;
     }
 
-    // Function to sort table data based on TF Version column
-    function sortTableByTFVersion() {
-        // Show loading message
-        document.getElementById('loading-message').style.display = 'block';
-
-        var table, rows, switching, i, x, y, shouldSwitch;
-        table = document.getElementById("json-table");
-        switching = true;
-        while (switching) {
-            switching = false;
-            rows = table.rows;
-            for (i = 1; i < (rows.length - 1); i++) {
-                shouldSwitch = false;
-                x = rows[i].getElementsByTagName("TD")[2];
-                y = rows[i + 1].getElementsByTagName("TD")[2];
-                if (sortDirection === 'asc') {
-                    if (parseFloat(x.innerHTML) > parseFloat(y.innerHTML)) {
-                        shouldSwitch = true;
-                        break;
-                    }
-                } else {
-                    if (parseFloat(x.innerHTML) < parseFloat(y.innerHTML)) {
-                        shouldSwitch = true;
-                        break;
-                    }
-                }
-            }
-            if (shouldSwitch) {
-                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                switching = true;
-            }
-        }
-        // Hide loading message
-        document.getElementById('loading-message').style.display = 'none';
-        // Change sort direction
-        sortDirection = (sortDirection === 'asc') ? 'desc' : 'asc';
-    }
-
     // Initial setup
     populateDropdown();
     renderJsonData(jsonData);
     displayTotalApplications(jsonData);
     displayTotalPipelines(jsonData);
     displayTotalInactivePipelines(jsonData);
-
-    // Add event listener for TF Version column header
-    document.getElementById("tf-version-header").addEventListener("click", function() {
-        sortTableByTFVersion();
-    });
 </script>
 
 </body>
