@@ -65,7 +65,6 @@
             <th>Name</th>
             <th>Email Address</th>
             <th>Display Name</th>
-            <th>Last Authentication Timestamp</th>
             <th id="sortDate">Last Authentication Date &#x21C5;</th> <!-- Sort icon placeholder -->
             <th>Current Employee</th>
         </tr>
@@ -178,7 +177,6 @@
                 <td>${item.name}</td>
                 <td>${item.emailAddress}</td>
                 <td>${item.displayName}</td>
-                <td>${item.lastAutheticationTimestamp}</td>
                 <td>${item.lastAuthenticationDate}</td>
                 <td>${item.isCurrentEmployee ? 'Yes' : 'No'}</td>
             `;
